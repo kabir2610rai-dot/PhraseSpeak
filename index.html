@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhraseSpeak</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #f0f6fc;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .app {
+      width: min(900px, 100%);
+    }
+
+    header {
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.4rem;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: #8b949e;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      resize: vertical;
+      background: #0d1117;
+      color: #f0f6fc;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 16px;
+      font: inherit;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    textarea:focus {
+      border-color: #58a6ff;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 17px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s ease;
+      background: #21262d;
+      color: #f0f6fc;
+      border: 1px solid #30363d;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: #30363d;
+    }
+
+    .speak {
+      background: #238636;
+      border-color: #238636;
+    }
+
+    .speak:hover {
+      background: #2ea043;
+    }
+
+    .stop {
+      background: #da3633;
+      border-color: #da3633;
+    }
+
+    .remembered-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .threshold {
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+
+    .phrases {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .phrase {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 999px;
+      padding: 7px 8px 7px 14px;
+    }
+
+    .phrase-text {
+      cursor: pointer;
+      color: #58a6ff;
+    }
+
+    .phrase-text:hover {
+      color: #79c0ff;
+      text-decoration: underline;
+    }
+
+    .count {
+      color: #8b949e;
+      font-size: 0.8rem;
+    }
+
+    .delete {
+      padding: 3px 7px;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      background: transparent;
+      border: 0;
+      color: #8b949e;
+    }
+
+    .delete:hover {
+      color: #ff7b72;
+      background: #30363d;
+    }
+
+    .empty {
+      color: #8b949e;
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      color: #8b949e;
+      font-size: 0.9rem;
+    }
+
+    select,
+    input[type="range"] {
+      width: 100%;
+    }
+
+    select {
+      background: #0d1117;
+      color: #f0f6fc;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 9px;
+    }
+
+    .range-value {
+      color: #f0f6fc;
+      font-size: 0.8rem;
+    }
+
+    .status {
+      margin-top: 12px;
+      color: #8b949e;
+      min-height: 20px;
+      font-size: 0.9rem;
+    }
+
+    .danger {
+      color: #ff7b72;
+    }
+
+    @media (max-width: 700px) {
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 450px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+
+    <header>
+      <h1>🧠 PhraseSpeak</h1>
+      <div class="subtitle">
+        Type something, speak it, and I'll remember phrases you use frequently.
+      </div>
+    </header>
+
+    <section class="card">
+      <textarea
+        id="textInput"
+        placeholder="Type something here..."
+        spellcheck="true"
+      ></textarea>
+
+      <div class="buttons">
+        <button class="speak" id="speakBtn">🔊 Speak</button>
+        <button class="stop" id="stopBtn">⏹ Stop</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+
+      <div class="status" id="status"></div>
+    </section>
+
+    <section class="card">
+      <div class="remembered-title">
+        <h2>🧠 Frequently Used Phrases</h2>
+        <span class="threshold">Remembered after 3 uses</span>
+      </div>
+
+      <div id="phrases" class="phrases"></div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-bottom: 18px;">🎛 Voice Settings</h2>
+
+      <div class="controls">
+
+        <label>
+          Voice
+          <select id="voiceSelect"></select>
+        </label>
+
+        <label>
+          Speed
+          <input
+            type="range"
+            id="rate"
+            min="0.5"
+            max="2"
+            value="1"
+            step="0.1"
+          />
+          <span class="range-value" id="rateValue">1.0×</span>
+        </label>
+
+        <label>
+          Pitch
+          <input
+            type="range"
+            id="pitch"
+            min="0"
+            max="2"
+            value="1"
+            step="0.1"
+          />
+          <span class="range-value" id="pitchValue">1.0</span>
+        </label>
+
+        <label>
+          Volume
+          <input
+            type="range"
+            id="volume"
+            min="0"
+            max="1"
+            value="1"
+            step="0.1"
+          />
+          <span class="range-value" id="volumeValue">100%</span>
+        </label>
+
+      </div>
+    </section>
+
+    <section class="card">
+      <button id="clearMemory" class="danger">
+        🗑 Clear All Remembered Phrases
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    /*
+      PhraseSpeak
+      ----------
+      Everything is stored locally in the browser.
+
+      Phrase memory:
+        - Case-insensitive
+        - A phrase is remembered after 3 uses
+        - Stored in localStorage
+
+      Clicking a remembered phrase:
+        - Inserts it into the textbox
+        - Immediately speaks it
+    */
+
+    const STORAGE_KEY = "phrasespeak-memory";
+    const MEMORY_THRESHOLD = 3;
+
+    const textInput = document.getElementById("textInput");
+    const speakBtn = document.getElementById("speakBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const phrasesContainer = document.getElementById("phrases");
+    const status = document.getElementById("status");
+
+    const voiceSelect = document.getElementById("voiceSelect");
+    const rate = document.getElementById("rate");
+    const pitch = document.getElementById("pitch");
+    const volume = document.getElementById("volume");
+
+    const rateValue = document.getElementById("rateValue");
+    const pitchValue = document.getElementById("pitchValue");
+    const volumeValue = document.getElementById("volumeValue");
+
+    let voices = [];
+
+    // -----------------------------
+    // MEMORY
+    // -----------------------------
+
+    function loadMemory() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveMemory(memory) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(memory));
+    }
+
+    // Makes phrase matching case-insensitive.
+    function normalize(text) {
+      return text
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+    }
+
+    /*
+      Break input into phrases.
+
+      Example:
+
+      "Hello there. How are you?"
+
+      becomes:
+
+      "Hello there"
+      "How are you"
+    */
+    function extractPhrases(text) {
+      return text
+        .split(/[.!?;\n]+/)
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+    }
+
+    function rememberText(text) {
+      const phrases = extractPhrases(text);
+
+      if (!phrases.length) return;
+
+      const memory = loadMemory();
+
+      phrases.forEach(originalPhrase => {
+        const key = normalize(originalPhrase);
+
+        if (!key) return;
+
+        if (!memory[key]) {
+          memory[key] = {
+            text: originalPhrase,
+            count: 0
+          };
+        }
+
+        memory[key].count++;
+
+        // Keep the newest version/capitalization.
+        memory[key].text = originalPhrase;
+      });
+
+      saveMemory(memory);
+      renderMemory();
+    }
+
+    function renderMemory() {
+      const memory = loadMemory();
+
+      const remembered = Object.entries(memory)
+        .filter(([_, data]) => data.count >= MEMORY_THRESHOLD)
+        .sort((a, b) => b[1].count - a[1].count);
+
+      phrasesContainer.innerHTML = "";
+
+      if (!remembered.length) {
+        phrasesContainer.innerHTML = `
+          <div class="empty">
+            No frequently used phrases yet.
+            Use a phrase 3 times and it'll appear here.
+          </div>
+        `;
+        return;
+      }
+
+      remembered.forEach(([key, data]) => {
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "phrase";
+
+        const phrase = document.createElement("span");
+        phrase.className = "phrase-text";
+        phrase.textContent = data.text;
+        phrase.title = "Click to insert and speak this phrase";
+
+        /*
+          CLICKING A REMEMBERED PHRASE:
+
+          1. Put the phrase into the textbox.
+          2. Cancel anything currently being spoken.
+          3. Create a new speech utterance.
+          4. Apply the currently selected voice/settings.
+          5. Speak it.
+        */
+        phrase.addEventListener("click", () => {
+
+          // Insert phrase into textbox
+          textInput.value = data.text;
+          textInput.focus();
+
+          // Stop any speech currently playing
+          speechSynthesis.cancel();
+
+          // Create speech
+          const utterance =
+            new SpeechSynthesisUtterance(data.text);
+
+          // Use selected voice
+          const selectedVoice =
+            voices[voiceSelect.value];
+
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+          }
+
+          // Use current settings
+          utterance.rate = Number(rate.value);
+          utterance.pitch = Number(pitch.value);
+          utterance.volume = Number(volume.value);
+
+          utterance.onstart = () => {
+            status.textContent =
+              "🔊 Speaking remembered phrase...";
+          };
+
+          utterance.onend = () => {
+            status.textContent = "Done.";
+          };
+
+          utterance.onerror = () => {
+            status.textContent =
+              "Something went wrong with speech.";
+          };
+
+          // Speak the phrase
+          speechSynthesis.speak(utterance);
+        });
+
+        const count = document.createElement("span");
+        count.className = "count";
+        count.textContent = `${data.count}×`;
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete";
+        deleteButton.textContent = "×";
+        deleteButton.title = "Forget this phrase";
+
+        deleteButton.addEventListener("click", (event) => {
+
+          // Prevent the phrase click from also triggering
+          event.stopPropagation();
+
+          const currentMemory = loadMemory();
+
+          delete currentMemory[key];
+
+          saveMemory(currentMemory);
+          renderMemory();
+        });
+
+        wrapper.appendChild(phrase);
+        wrapper.appendChild(count);
+        wrapper.appendChild(deleteButton);
+
+        phrasesContainer.appendChild(wrapper);
+      });
+    }
+
+    // -----------------------------
+    // TEXT TO SPEECH
+    // -----------------------------
+
+    function loadVoices() {
+
+      voices = speechSynthesis.getVoices();
+
+      voiceSelect.innerHTML = "";
+
+      voices.forEach((voice, index) => {
+
+        const option =
+          document.createElement("option");
+
+        option.value = index;
+
+        option.textContent =
+          `${voice.name} (${voice.lang})` +
+          (voice.default
+            ? " — Default"
+            : "");
+
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    function speak() {
+
+      const text =
+        textInput.value.trim();
+
+      if (!text) {
+        status.textContent =
+          "Type something first.";
+        return;
+      }
+
+      if (!("speechSynthesis" in window)) {
+        status.textContent =
+          "Your browser doesn't support text-to-speech.";
+        return;
+      }
+
+      // Stop previous speech
+      speechSynthesis.cancel();
+
+      const utterance =
+        new SpeechSynthesisUtterance(text);
+
+      const selectedVoice =
+        voices[voiceSelect.value];
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
+      utterance.rate =
+        Number(rate.value);
+
+      utterance.pitch =
+        Number(pitch.value);
+
+      utterance.volume =
+        Number(volume.value);
+
+      utterance.onstart = () => {
+        status.textContent =
+          "🔊 Speaking...";
+      };
+
+      utterance.onend = () => {
+        status.textContent =
+          "Done.";
+      };
+
+      utterance.onerror = () => {
+        status.textContent =
+          "Something went wrong with speech.";
+      };
+
+      speechSynthesis.speak(utterance);
+
+      // Count phrase usage
+      rememberText(text);
+    }
+
+    // -----------------------------
+    // BUTTON EVENTS
+    // -----------------------------
+
+    speakBtn.addEventListener("click", speak);
+
+    stopBtn.addEventListener("click", () => {
+
+      speechSynthesis.cancel();
+
+      status.textContent =
+        "Speech stopped.";
+    });
+
+    clearBtn.addEventListener("click", () => {
+
+      textInput.value = "";
+
+      textInput.focus();
+
+      status.textContent = "";
+    });
+
+    // -----------------------------
+    // CLEAR MEMORY
+    // -----------------------------
+
+    document
+      .getElementById("clearMemory")
+      .addEventListener("click", () => {
+
+        const confirmed =
+          confirm(
+            "Forget all remembered phrases?"
+          );
+
+        if (!confirmed) return;
+
+        localStorage.removeItem(STORAGE_KEY);
+
+        renderMemory();
+
+        status.textContent =
+          "All remembered phrases cleared.";
+      });
+
+    // -----------------------------
+    // VOICE SETTINGS
+    // -----------------------------
+
+    rate.addEventListener("input", () => {
+
+      rateValue.textContent =
+        `${Number(rate.value).toFixed(1)}×`;
+    });
+
+    pitch.addEventListener("input", () => {
+
+      pitchValue.textContent =
+        Number(pitch.value).toFixed(1);
+    });
+
+    volume.addEventListener("input", () => {
+
+      volumeValue.textContent =
+        `${Math.round(
+          Number(volume.value) * 100
+        )}%`;
+    });
+
+    // -----------------------------
+    // KEYBOARD SHORTCUT
+    // -----------------------------
+
+    // Ctrl + Enter / Cmd + Enter = Speak
+    textInput.addEventListener("keydown", event => {
+
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "Enter"
+      ) {
+        speak();
+      }
+    });
+
+    // -----------------------------
+    // VOICE LOADING
+    // -----------------------------
+
+    speechSynthesis.onvoiceschanged =
+      loadVoices;
+
+    // -----------------------------
+    // INITIAL SETUP
+    // -----------------------------
+
+    loadVoices();
+
+    renderMemory();
+  </script>
+</body>
+</html>
