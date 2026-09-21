@@ -33,10 +33,7 @@ Project Purpose
 
 The purpose of PhraseSpeak is to provide a free and simple digital communication option for people who may have difficulty speaking. The project focuses on accessibility, ease of use, and quick communication.
 
-Files
-PhraseSpeak/
-│
-└── index.html
+The file name is index.html
 
 The project uses internal CSS and JavaScript within index.html, so the website can be run as a standalone file.
 
